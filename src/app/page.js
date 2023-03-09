@@ -1,91 +1,192 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from './page.module.css'
+"use client";
+import React, { useEffect, useState } from "react";
+import {
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
+  useDisclosure,
+  Button,
+  Box,
+  Text,
+} from "@chakra-ui/react";
+import { ViewIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons";
+import { QueryClient, QueryClientProvider, useQuery } from "react-query";
+const queryClient = new QueryClient();
+import axios from "axios";
+import DetailModals from "./component/modal";
 
-const inter = Inter({ subsets: ['latin'] })
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
+    <QueryClientProvider client={queryClient}>
+      <Content />
+    </QueryClientProvider>
+  );
+  function Content(){
+const { isOpen, onOpen, onClose } = useDisclosure();
+const [postData, setPostData] = useState([]);
+const [selected, setSelected] = useState();
+const [loading, setLoading] = useState(true);
+const [whichModal, setWhichModal] = useState();
+
+const getPost = async () => {
+  try {
+    setLoading(true);
+    await axios
+      .get("https://jsonplaceholder.typicode.com/posts")
+      .then(async (res) => {
+        console.log(res);
+        setPostData(res.data);
+        setLoading(false);
+      });
+  } catch (error) {
+    setLoading(false);
+    console.log(error.message);
+  }
+};
+
+const deletePost = async (data) => {
+  try {
+    const res = await axios.delete(
+      `https://jsonplaceholder.typicode.com/posts/${data}`
+    );
+    alert("Data Berhasil Dihapus!" + " || Resposnse Status :" + res.status);
+    location.reload();
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
+useEffect(() => {
+  getPost();
+}, []);
+
+    // const { isLoading, error, data } = useQuery("names", () =>
+    //   axios("https://jsonplaceholder.typicode.com/posts")
+    //   .then(async(res) => {
+    //     console.log(res);
+    //     setPostData(res);
+    //   })
+    // );
+
+    // if (isLoading) return "Loading...";
+
+    // if (error) return "An error has occurred: " + error.message;
+return (
+  <>
+    <Box backgroundColor="blue.300" p={10}>
+      <div className="container">
+        <Box
+          backgroundColor="white"
+          boxShadow="dark-lg"
+          rounded={"md"}
+          px={20}
+          pb={20}
+        >
+          {whichModal === "detail" ? (
+            <DetailModals
+              data={selected}
+              isOpen={isOpen}
+              onClose={onClose}
+              whichModal={"detail"}
             />
-          </a>
-        </div>
+          ) : whichModal === "edit" ? (
+            <DetailModals
+              data={selected}
+              isOpen={isOpen}
+              onClose={onClose}
+              whichModal={"edit"}
+            />
+          ) : whichModal === "tambah" ? (
+            <DetailModals
+              data={selected}
+              isOpen={isOpen}
+              onClose={onClose}
+              whichModal={"tambah"}
+            />
+          ) : (
+            ""
+          )}
+          <h1>
+            <Text fontSize="5xl">
+              Take Home Project Front End Developer <br /> PT Informatika Media
+              Pratama <br />
+            </Text>
+            <Text fontSize={"xl"}>Created By Ahmad Muzakky</Text>
+          </h1>
+          <Button
+            onClick={async (e) => {
+              setWhichModal("tambah");
+              onOpen(e);
+            }}
+          >
+            Tambah Data
+          </Button>
+          <TableContainer mt={5} p={5}>
+            <Table size="xl">
+              <Thead>
+                <Tr>
+                  <Th>Id</Th>
+                  <Th>User Id</Th>
+                  <Th>Title</Th>
+                  <Th>Detail Body</Th>
+                  <Th>Action</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {loading
+                  ? ""
+                  : postData.map((items) => (
+                      <Tr>
+                        <Td>{items.id}</Td>
+                        <Td>{items.userId}</Td>
+                        <Td>{items.title}</Td>
+                        <Td>
+                          <Button
+                            onClick={async (e) => {
+                              setWhichModal("detail");
+                              await setSelected(items.body);
+                              onOpen(e);
+                            }}
+                          >
+                            <ViewIcon />
+                          </Button>
+                        </Td>
+                        <Td>
+                          <Button
+                            color="blue.500"
+                            onClick={async (e) => {
+                              setWhichModal("edit");
+                              await setSelected(items.id);
+                              onOpen(e);
+                            }}
+                          >
+                            <EditIcon />
+                          </Button>
+                          <Button
+                            ml={3}
+                            color="red.500"
+                            onClick={() => {
+                              deletePost(items.id);
+                            }}
+                          >
+                            <DeleteIcon />
+                          </Button>
+                        </Td>
+                      </Tr>
+                    ))}
+              </Tbody>
+            </Table>
+          </TableContainer>
+        </Box>
       </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-        <div className={styles.thirteen}>
-          <Image src="/thirteen.svg" alt="13" width={40} height={31} priority />
-        </div>
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://beta.nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    </Box>
+  </>
+);
+  }
+  
 }
