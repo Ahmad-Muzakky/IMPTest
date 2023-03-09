@@ -1,4 +1,5 @@
 ## Take Home Project Front End Developer - PT Informatika Media Pratama
+Created by Ahmad Muzakky
 
 First, run this command:
 ```bash
